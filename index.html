@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimball Data Warehouse — Ad Pageview Analytics BI Dashboard</title>
+    <meta name="description" content="Hệ thống BI Dashboard phân tích log quảng cáo chuẩn Kimball Star Schema (Power BI / Metabase style) - Top Domain, Geo IP, và 24h Hourly Pattern.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header & Ribbon Navigation (Power BI / Metabase Style) -->
+    <header class="header-ribbon">
+        <div class="brand-section">
+            <div class="logo-badge" id="app-logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                </svg>
+            </div>
+            <div class="brand-title">
+                <h1>Kimball Data Warehouse BI Dashboard</h1>
+                <p>
+                    <span class="status-dot"></span>
+                    <span>Tầng Gold Hoàn Tất &bull; 35.5M Records &bull; Star Schema Ready</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <!-- Platform Slicer Filter -->
+            <div class="filter-group">
+                <label for="select-platform">Platform</label>
+                <select id="select-platform" class="filter-select">
+                    <option value="all">Tất cả Nền tảng (Mobile + PC)</option>
+                    <option value="mobile">Mobile (19.5M views)</option>
+                    <option value="pc">PC (16.0M views)</option>
+                </select>
+            </div>
+
+            <!-- Date Slicer Filter -->
+            <div class="filter-group">
+                <label for="select-date">Date Range</label>
+                <select id="select-date" class="filter-select">
+                    <option value="all">2026-09-02 &rarr; 2026-09-11 (10 Ngày)</option>
+                    <option value="2026-09-02">2026-09-02 (Day 1)</option>
+                </select>
+            </div>
+
+            <button id="btn-export-report" class="btn-primary" onclick="window.print()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Xuất Báo Cáo
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs Bar -->
+    <nav class="nav-tabs-bar" aria-label="Dashboard Views">
+        <button class="nav-tab active" data-target="overview" id="tab-overview">
+            <span>Tổng Quan Executive</span>
+        </button>
+        <button class="nav-tab" data-target="bai1" id="tab-bai1">
+            <span>Bài 1: Top 10 Domains</span>
+        </button>
+        <button class="nav-tab" data-target="bai2" id="tab-bai2">
+            <span>Bài 2: Geo Distribution</span>
+        </button>
+        <button class="nav-tab" data-target="bai3" id="tab-bai3">
+            <span>Bài 3: 24h Hourly Pattern</span>
+        </button>
+        <button class="nav-tab" data-target="erd" id="tab-erd">
+            <span>Mô Hình Star Schema (ERD)</span>
+        </button>
+        <button class="nav-tab" data-target="sql" id="tab-sql">
+            <span>SQL Studio (Metabase Query)</span>
+        </button>
+    </nav>
+
+    <!-- Main Dashboard Body -->
+    <main class="dashboard-container">
+
+        <!-- Executive KPI Cards Grid -->
+        <section class="kpi-grid" aria-label="Key Performance Indicators">
+            <div class="kpi-card blue">
+                <div class="kpi-header">
+                    <span class="kpi-label">Tổng Lượt Xem (Pageviews)</span>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" fill="#3b82f6" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-total-views">35,504,320</div>
+                <div class="kpi-subtext">
+                    <span class="positive">&#9650; +12.4%</span> so với tuần trước
+                </div>
+            </div>
+
+            <div class="kpi-card cyan">
+                <div class="kpi-header">
+                    <span class="kpi-label">Người Dùng Độc Nhất (Unique UV)</span>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" fill="#06b6d4" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-total-uv">15,782,940</div>
+                <div class="kpi-subtext">
+                    <span>Cookie ID (PC) + AdID (Mobile)</span>
+                </div>
+            </div>
+
+            <div class="kpi-card emerald">
+                <div class="kpi-header">
+                    <span class="kpi-label">Tổng Publishers / Domains</span>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" fill="#10b981" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-active-domains">3,998</div>
+                <div class="kpi-subtext">
+                    <span class="positive">Bảng dim_domain sạch</span>
+                </div>
+            </div>
+
+            <div class="kpi-card purple">
+                <div class="kpi-header">
+                    <span class="kpi-label">Khung Giờ Cao Điểm (Peak Hour)</span>
+                    <div class="kpi-icon">
+                        <svg width="18" height="18" fill="#8b5cf6" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpi-peak-hour">20:00 (19.1M)</div>
+                <div class="kpi-subtext">
+                    <span>Mobile đỉnh tối &bull; PC đỉnh sáng</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 1: OVERVIEW -->
+        <div id="sec-overview" class="content-section active">
+            <div class="dashboard-row">
+                <!-- Bài 1 Widget -->
+                <div class="col-7">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <span>Bài 1: Top Domains Traffic Lớn Nhất</span>
+                                <span class="panel-badge">Kimball Dimension Analysis</span>
+                            </h2>
+                        </div>
+                        <div class="chart-box">
+                            <canvas id="chart-domains-bar"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bài 2 Widget -->
+                <div class="col-5">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <span>Bài 2: Phân Bố Địa Lý (GeoIP)</span>
+                                <span class="panel-badge">dim_location</span>
+                            </h2>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                            <div style="flex: 1; text-align: center; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8;">Top Quốc Gia</div>
+                                <div id="geo-top-country" style="font-size: 1.25rem; font-weight: 700; color: #10b981;">Vietnam</div>
+                            </div>
+                            <div style="flex: 1; text-align: center; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8;">Top Thành Phố</div>
+                                <div id="geo-top-city" style="font-size: 1.25rem; font-weight: 700; color: #3b82f6;">Ha Noi</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <div style="flex: 1;">
+                                <div id="geo-city-list"></div>
+                            </div>
+                            <div style="width: 140px;">
+                                <canvas id="chart-geo-donut"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bài 3 Widget: Hourly Pattern -->
+            <div class="dashboard-row">
+                <div class="col-12">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <span>Bài 3: Pattern Truy Cập Theo 24 Giờ (Mobile vs PC Peak Comparison)</span>
+                                <span class="panel-badge">dim_time &times; fact_pageview_hourly</span>
+                            </h2>
+                            <div style="display: flex; gap: 1rem; font-size: 0.75rem;">
+                                <span style="display: flex; align-items: center; gap: 0.35rem; color: #3b82f6;">
+                                    <span style="width: 10px; height: 10px; background: #3b82f6; border-radius: 2px;"></span> Mobile (Đỉnh 20h)
+                                </span>
+                                <span style="display: flex; align-items: center; gap: 0.35rem; color: #10b981;">
+                                    <span style="width: 10px; height: 10px; background: #10b981; border-radius: 2px;"></span> PC (Đỉnh 10h giờ hành chính)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="chart-box">
+                            <canvas id="chart-hourly-trend"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: BÀI 1 TOP DOMAINS -->
+        <div id="sec-bai1" class="content-section">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span>Bảng Xếp Hạng Top 10 Domains (Overall & Thị Phần %)</span>
+                    </h2>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Thứ Hạng</th>
+                                <th>Domain Publisher</th>
+                                <th>Lượt Xem (Pageviews)</th>
+                                <th>Thị Phần %</th>
+                                <th>Mức Độ Tập Trung</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-top-domains"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: BÀI 2 GEO -->
+        <div id="sec-bai2" class="content-section">
+            <div class="dashboard-row">
+                <div class="col-6">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <span>Bản Đồ Phân Bố Geo Theo IP (Client IP GeoIP Lookup)</span>
+                            </h2>
+                        </div>
+                        <div style="background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; text-align: center;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#127759;</div>
+                            <h3 style="color: #60a5fa; margin-bottom: 0.5rem;">Việt Nam Chiếm &gt;97% Lượng Traffic</h3>
+                            <p style="color: #94a3b8; font-size: 0.85rem; max-width: 450px; margin: 0 auto;">
+                                Dữ liệu được giải mã thông qua thư viện DB-IP offline <code>dbip-city-ipv6.mmdb</code>. Sau khi sửa lỗi index IP của PC (index 19 thay vì 26), 100% bản ghi IPv4 được định vị chính xác.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <span>Top Thành Phố Tại Việt Nam</span>
+                            </h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Thành Phố</th>
+                                        <th>Quốc Gia</th>
+                                        <th>Lượt Xem</th>
+                                        <th>Tỷ Trọng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong style="color: #60a5fa;">Hà Nội</strong></td>
+                                        <td>Vietnam</td>
+                                        <td>23,942,752</td>
+                                        <td><span class="panel-badge" style="background: rgba(59,130,246,0.15); color: #60a5fa;">62.4%</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong style="color: #60a5fa;">Hồ Chí Minh</strong></td>
+                                        <td>Vietnam</td>
+                                        <td>9,984,632</td>
+                                        <td><span class="panel-badge" style="background: rgba(6,182,212,0.15); color: #06b6d4;">28.1%</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong style="color: #60a5fa;">Đà Nẵng</strong></td>
+                                        <td>Vietnam</td>
+                                        <td>2,188,465</td>
+                                        <td><span class="panel-badge" style="background: rgba(16,185,129,0.15); color: #10b981;">6.5%</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: BÀI 3 HOURLY PATTERN -->
+        <div id="sec-bai3" class="content-section">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span>Chi Tiết Phân Bố Theo 24 Khung Giờ & Hành Vi Người Dùng</span>
+                    </h2>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="padding: 1rem; background: rgba(30,41,59,0.5); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                        <h4 style="color: #93c5fd; font-size: 0.85rem;">Mobile Peak: Buổi Tối (19h - 22h)</h4>
+                        <p style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.25rem;">Người dùng giải trí, đọc báo mạng (vietjack, kenh14, tuoitre). Đỉnh 20h đạt 19.1 triệu lượt xem.</p>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(30,41,59,0.5); border-radius: 8px; border-left: 4px solid #10b981;">
+                        <h4 style="color: #6ee7b7; font-size: 0.85rem;">PC Peak: Giờ Hành Chính (9h - 11h & 14h - 16h)</h4>
+                        <p style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.25rem;">Nhân viên công sở tra cứu văn bản luật (thuvienphapluat), bất động sản, chứng khoán.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: STAR SCHEMA (ERD) -->
+        <div id="sec-erd" class="content-section">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span>Mô Hình Star Schema Kimball — Kiến Trúc Tầng Gold</span>
+                        <span class="panel-badge">5 Dimensions + 1 Fact Table</span>
+                    </h2>
+                </div>
+                
+                <div class="erd-container">
+                    <!-- Dim Time -->
+                    <div class="erd-card dim">
+                        <div class="erd-header">
+                            <span>dim_time</span>
+                            <span>24 rows</span>
+                        </div>
+                        <div class="erd-fields">
+                            <div class="erd-field pk"><span>time_key</span><span>PK INT</span></div>
+                            <div class="erd-field"><span>hour_of_day</span><span>INT (0-23)</span></div>
+                            <div class="erd-field"><span>time_slot</span><span>VARCHAR</span></div>
+                            <div class="erd-field"><span>period_of_day</span><span>VARCHAR</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Dim Platform -->
+                    <div class="erd-card dim">
+                        <div class="erd-header">
+                            <span>dim_platform</span>
+                            <span>2 rows</span>
+                        </div>
+                        <div class="erd-fields">
+                            <div class="erd-field pk"><span>platform_key</span><span>PK INT</span></div>
+                            <div class="erd-field"><span>platform_name</span><span>Mobile / PC</span></div>
+                            <div class="erd-field"><span>tracking_id_type</span><span>AdID / Cookie</span></div>
+                            <div class="erd-field"><span>network_type</span><span>4G/5G / FTTH</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Fact Table (Center) -->
+                    <div class="erd-card fact">
+                        <div class="erd-header">
+                            <span>fact_pageview_hourly</span>
+                            <span>Fact Table</span>
+                        </div>
+                        <div class="erd-fields">
+                            <div class="erd-field fk"><span>platform_key</span><span>FK INT (Part.)</span></div>
+                            <div class="erd-field fk"><span>date_key</span><span>FK INT</span></div>
+                            <div class="erd-field fk"><span>time_key</span><span>FK INT</span></div>
+                            <div class="erd-field fk"><span>domain_key</span><span>FK INT</span></div>
+                            <div class="erd-field fk"><span>location_key</span><span>FK INT</span></div>
+                            <div class="erd-field" style="color: #f59e0b; font-weight: 600;"><span>pageview_count</span><span>BIGINT</span></div>
+                            <div class="erd-field" style="color: #f59e0b; font-weight: 600;"><span>unique_visitor_count</span><span>BIGINT</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Dim Domain -->
+                    <div class="erd-card dim">
+                        <div class="erd-header">
+                            <span>dim_domain</span>
+                            <span>3,998 rows</span>
+                        </div>
+                        <div class="erd-fields">
+                            <div class="erd-field pk"><span>domain_key</span><span>PK INT</span></div>
+                            <div class="erd-field"><span>clean_domain</span><span>VARCHAR</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Dim Location -->
+                    <div class="erd-card dim">
+                        <div class="erd-header">
+                            <span>dim_location</span>
+                            <span>GeoIP</span>
+                        </div>
+                        <div class="erd-fields">
+                            <div class="erd-field pk"><span>location_key</span><span>PK INT</span></div>
+                            <div class="erd-field"><span>country</span><span>VARCHAR</span></div>
+                            <div class="erd-field"><span>city</span><span>VARCHAR</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Dim Date -->
+                    <div class="erd-card dim">
+                        <div class="erd-header">
+                            <span>dim_date</span>
+                            <span>10 Days</span>
+                        </div>
+                        <div class="erd-fields">
+                            <div class="erd-field pk"><span>date_key</span><span>PK INT</span></div>
+                            <div class="erd-field"><span>full_date</span><span>DATE</span></div>
+                            <div class="erd-field"><span>day_of_week</span><span>INT</span></div>
+                            <div class="erd-field"><span>is_weekend</span><span>BOOLEAN</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 6: SQL STUDIO (POWER BI / METABASE NATIVE QUERY) -->
+        <div id="sec-sql" class="content-section">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span>SQL Studio — Truy Vấn Trực Tiếp Chuẩn Metabase / Power BI</span>
+                        <span class="panel-badge">Native SQL Engine</span>
+                    </h2>
+                </div>
+
+                <div class="sql-studio-container">
+                    <div class="sql-toolbar">
+                        <div class="sql-quick-queries">
+                            <span style="font-size: 0.75rem; color: #94a3b8; display: flex; align-items: center;">Mẫu Query:</span>
+                            <button class="quick-btn" data-query="SELECT clean_domain, SUM(pageview_count) as total_views FROM fact_pageview_hourly JOIN dim_domain USING(domain_key) GROUP BY clean_domain ORDER BY total_views DESC LIMIT 10;">
+                                Bài 1: Top 10 Domains
+                            </button>
+                            <button class="quick-btn" data-query="SELECT hour_of_day, time_slot, SUM(pageview_count) as views FROM fact_pageview_hourly JOIN dim_time USING(time_key) GROUP BY hour_of_day, time_slot ORDER BY hour_of_day ASC;">
+                                Bài 3: 24h Hourly Pattern
+                            </button>
+                            <button class="quick-btn" data-query="SELECT city, country, SUM(pageview_count) as views FROM fact_pageview_hourly JOIN dim_location USING(location_key) GROUP BY city, country ORDER BY views DESC;">
+                                Bài 2: Geo City Traffic
+                            </button>
+                            <button class="quick-btn" data-query="SELECT * FROM fact_pageview_hourly LIMIT 20;">
+                                Star Schema Fact Rows
+                            </button>
+                        </div>
+                        <div>
+                            <button id="btn-run-sql" class="btn-primary" style="padding: 0.35rem 0.85rem; font-size: 0.75rem;">
+                                &#9654; Thực Thi (F5)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sql-editor-area">
+                        <textarea id="sql-input" spellcheck="false">SELECT 
+    d.clean_domain, 
+    SUM(f.pageview_count) AS total_pageviews,
+    ROUND(SUM(f.pageview_count) * 100.0 / 35504320, 2) AS market_share_pct
+FROM fact_pageview_hourly f
+JOIN dim_domain d ON f.domain_key = d.domain_key
+GROUP BY d.clean_domain
+ORDER BY total_pageviews DESC
+LIMIT 10;</textarea>
+                    </div>
+
+                    <div class="sql-results-header">
+                        <span id="sql-status">Sẵn sàng thực thi truy vấn...</span>
+                        <button id="btn-export-sql" class="btn-icon" title="Tải kết quả CSV" style="width: auto; padding: 0 0.5rem; font-size: 0.75rem; gap: 0.3rem;">
+                            &#128190; Tải CSV
+                        </button>
+                    </div>
+
+                    <div id="sql-results-table" class="table-container" style="min-height: 220px; background: #0d1117;">
+                        <div style="padding: 2rem; text-align: center; color: #64748b;">
+                            Bấm "Thực Thi" hoặc chọn một câu query mẫu phía trên để xem kết quả.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="data.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

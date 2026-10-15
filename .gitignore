@@ -1,0 +1,8 @@
+node_modules/
+.cursor/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+*.parquet
+*.mmdb

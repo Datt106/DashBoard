@@ -1,0 +1,21 @@
+{
+  "name": "dashboard",
+  "version": "1.0.0",
+  "description": "Kimball Data Warehouse - Ad Pageview Analytics. Browser automation via Playwright MCP and Chrome DevTools MCP.",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "spark",
+    "kimball",
+    "data-warehouse"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/mcp": "^0.0.83",
+    "playwright": "^1.64.0"
+  }
+}
